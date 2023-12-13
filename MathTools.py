@@ -62,11 +62,11 @@ def angle_wheels_bikemode(point_on_axis):
     print(angle1_degrees, angle2_degrees)
     return angle1_degrees, angle2_degrees
 
-def turning_sign_bikemode(point_on_axis, angle1_degrees, angle2_degrees):
-    signs = [1,1,1,1]
-    if (angle1_degrees < 0):
+def turning_sign_bikemode(point_on_axis):
+    signs = [1,-1,1,1]
+    if (point_on_axis > -0.5):
         signs[0] = -1
-    if (angle2_degrees < 0):
+    if (point_on_axis > 0.5):
         signs[1] = -1
     if (point_on_axis > -0.5):
         signs[2] = -1
@@ -74,6 +74,8 @@ def turning_sign_bikemode(point_on_axis, angle1_degrees, angle2_degrees):
         signs[3] = -1
     return signs
 
+
+#ajustar velocidade linear angular
 def velocity_factor_bikemode(point_on_axis, r_scale):
     radius = [0,0,0,0]
     radius[0] = abs(math.hypot((-0.5 - point_on_axis), 1))
@@ -91,9 +93,15 @@ def velocity_factor_bikemode(point_on_axis, r_scale):
             factors[index] = f
     return factors
 
+def point_from_omega_v_ration(omega,v):
+    if (omega >= 0.05):
+        return v/omega
+    else:
+        return 1.0e9
+
 def bikemode_params(point_on_axis, r_scale):
     angle1_degrees, angle2_degrees = angle_wheels_bikemode(point_on_axis)
-    signs = turning_sign_bikemode(point_on_axis, angle1_degrees, angle2_degrees)
+    signs = turning_sign_bikemode(point_on_axis)
     factors = velocity_factor_bikemode(point_on_axis, r_scale)
     print(signs)
     print(factors)

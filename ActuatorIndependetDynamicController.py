@@ -97,11 +97,7 @@ class AcindyController:
         # get actual data
         timestamp, value = self.interface.send_type_2_message(self.ID)
         # Sensor properties atualization
-        self.sensor_last_timestamp = self.sensor_timestamp
-        self.sensor_last_value = self.sensor_value
-        self.sensor_timestamp = timestamp
-        self.sensor_value = value
-        self.dt = self.sensor_timestamp - self.sensor_last_timestamp
+        self._set_sensor_data(timestamp, value)
         return True
 
     def _set_sensor_data(self, timestamp, sensor_value):
@@ -110,6 +106,7 @@ class AcindyController:
         self.sensor_last_value = self.sensor_value
         self.sensor_timestamp = timestamp
         self.sensor_value = sensor_value
+        self.sensor_delta_value = self.delta_pos_discontinuity_treatement(self.sensor_value-self.sensor_last_value)
         self.dt = timestamp - self.sensor_last_timestamp
 
     def cronological_data_index_roll(self):
@@ -125,12 +122,21 @@ class AcindyController:
         dt = self.dt
         i_l = self.last_recent_data_index
         i_m = self.most_recent_data_index
-        self.state_data[i_m][0] = self.sensor_value*1.0 # set position
-        self.state_data[i_m][1] = ( self.state_data[i_m][0] - self.state_data[i_l][0] ) / dt # set velocity
+        self.state_data[i_m][0] =   self.sensor_value*1.0 # set position
+        self.state_data[i_m][1] = ( self.sensor_delta_value ) / dt # set velocity
         self.state_data[i_m][2] = ( self.state_data[i_m][1] - self.state_data[i_l][1] ) / dt # set acceleration
         self.state_data[i_m][3] = ( self.state_data[i_m][2] - self.state_data[i_l][2] ) / dt # set jerk
         self.state_data[i_m][4] = ( self.state_data[i_m][3] - self.state_data[i_l][3] ) / dt # set jounce
         # self.print_variables()
+
+    def delta_pos_discontinuity_treatement(self,delta_pos):
+        abs_delta_post = abs(delta_pos)
+        if (abs_delta_post > 180):
+            if delta_pos > 0:
+                delta_pos = 360 - abs_delta_post
+            else:
+                delta_pos = -1* (360 - abs_delta_post)
+        return delta_pos
 
     def state_get_vector(self):
         return self.state_data[self.most_recent_data_index]
